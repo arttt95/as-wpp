@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.arttt95.whatsapp.databinding.ActivityCadastroBinding
+import com.arttt95.whatsapp.models.Usuario
 import com.arttt95.whatsapp.utils.exibirMensagem
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
@@ -16,6 +17,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
+import com.google.firebase.firestore.FirebaseFirestore
 
 class CadastroActivity : AppCompatActivity() {
 
@@ -26,8 +28,13 @@ class CadastroActivity : AppCompatActivity() {
     private lateinit var nome: String
     private lateinit var email: String
     private lateinit var password: String
+
     private val firebaseAuth by lazy {
         FirebaseAuth.getInstance()
+    }
+
+    private val firestore by lazy {
+        FirebaseFirestore.getInstance()
     }
 
     private lateinit var textInputCadastroNome: TextInputLayout
@@ -74,10 +81,19 @@ class CadastroActivity : AppCompatActivity() {
             email, password
         ).addOnCompleteListener { resultado ->
             if(resultado.isSuccessful) {
-                exibirMensagem("Sucesso ao cadastrar usuário")
-                startActivity(
-                    Intent(applicationContext, MainActivity::class.java)
-                )
+
+                // Salvar dados do usuário no Firestore
+                // ID, Nome, E-mail, Foto
+                val idUsuario = resultado.result.user?.uid
+
+                if(idUsuario != null) {
+                    val usuario = Usuario(
+                        idUsuario, nome, email,
+                    )
+                    salvarUsuarioFirestore(usuario)
+                }
+
+
             }
         }.addOnFailureListener { err ->
             try {
@@ -93,6 +109,23 @@ class CadastroActivity : AppCompatActivity() {
                 exibirMensagem("O e-mail inserido não é válido")
             }
         }
+    }
+
+    private fun salvarUsuarioFirestore(usuario: Usuario) {
+        firestore.collection("usuarios")
+            .document( usuario.id )
+            .set( usuario )
+            .addOnSuccessListener {
+                exibirMensagem("Sucesso ao cadastrar usuário")
+
+                startActivity(
+                    Intent(applicationContext, MainActivity::class.java)
+                )
+
+            }.addOnFailureListener { err ->
+                err.printStackTrace()
+                exibirMensagem("Erro ao cadastrar usuário")
+            }
     }
 
     private fun validarCampos(): Boolean {
