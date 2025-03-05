@@ -56,4 +56,8 @@
     <style name="ActionOverflowButton" parent="Widget.AppCompat.ActionButton.Overflow" >
         <item name="tint">@color/md_theme_onPrimary</item>
     </style>
+
+    <style name="Circulo">
+        <item name="cornerSize">40%</item>
+    </style>
 </resources>
