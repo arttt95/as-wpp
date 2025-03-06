@@ -11,7 +11,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.MenuProvider
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.viewpager2.widget.ViewPager2
+import com.arttt95.whatsapp.adapters.ViewPagerAdapter
 import com.arttt95.whatsapp.databinding.ActivityMainBinding
+import com.google.android.material.tabs.TabLayout
+import com.google.android.material.tabs.TabLayoutMediator
 import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : AppCompatActivity() {
@@ -24,6 +28,9 @@ class MainActivity : AppCompatActivity() {
         FirebaseAuth.getInstance()
     }
 
+    private lateinit var tabLayoutPrincipal: TabLayout
+    private lateinit var viewPagerPrincipal: ViewPager2
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -34,7 +41,36 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
+        inicializarComponentes()
         inicializarToolbar()
+        inicializarNavegacaoAbas()
+
+    }
+
+    private fun inicializarComponentes() {
+
+        tabLayoutPrincipal = binding.tabLayoutPrincipal
+        viewPagerPrincipal = binding.viewPagerPrincipal
+
+    }
+
+
+    private fun inicializarNavegacaoAbas() {
+
+        // Adapter
+
+        val tabs = listOf("Conversas", "Contatos")
+
+        viewPagerPrincipal.adapter = ViewPagerAdapter(
+            tabs, supportFragmentManager, lifecycle
+        )
+
+        tabLayoutPrincipal.isTabIndicatorFullWidth = true
+        TabLayoutMediator(tabLayoutPrincipal, viewPagerPrincipal) { tab, position ->
+
+            tab.text = tabs[position]
+
+        }.attach()
 
     }
 
