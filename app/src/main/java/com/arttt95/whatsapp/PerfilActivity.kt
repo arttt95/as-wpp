@@ -18,24 +18,31 @@ import com.arttt95.whatsapp.utils.exibirMensagem
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 
 class PerfilActivity : AppCompatActivity() {
 
-    private val binding by lazy {
+    private val binding by lazy { // BINDING
         ActivityPerfilBinding.inflate(layoutInflater)
     }
 
     private val firebaseAuth by lazy {
         FirebaseAuth.getInstance()
-    }
+    } // AUTH Reference
 
     private val storage by lazy {
         FirebaseStorage.getInstance()
+    } // STORAGE Reference
+
+    private val firestore by lazy { // FIRESTORE Reference
+        FirebaseFirestore.getInstance()
     }
 
     private var temPermissaoCamera = false
     private var temPermissaoGaleria = false
+
+    private val idUsuario = firebaseAuth.currentUser?.uid
 
     private val gerenciadorGaleria = registerForActivityResult(
         ActivityResultContracts.GetContent()
@@ -78,7 +85,7 @@ class PerfilActivity : AppCompatActivity() {
         //              -> id_usuario
         //                      -> perfil.jpg
 
-        val idUsuario = firebaseAuth.currentUser?.uid
+
         if(idUsuario != null) {
             storage
                 .getReference("fotos")
@@ -89,6 +96,18 @@ class PerfilActivity : AppCompatActivity() {
                 .addOnSuccessListener { task ->
 
                     exibirMensagem("Sucesso ao fazer upload da imagem")
+                    task.metadata
+                        ?.reference
+                        ?.downloadUrl
+                        ?.addOnSuccessListener { downloadUrl ->
+
+                            val dados = mapOf(
+                                "foto" to downloadUrl.toString()
+                            )
+
+                            atualizarDadosPerfil( idUsuario, dados )
+
+                        }
 
                 }.addOnFailureListener { err ->
                     exibirMensagem("Erro ao fazer Upload da imagem")
@@ -97,6 +116,17 @@ class PerfilActivity : AppCompatActivity() {
 
 
 
+    }
+
+    private fun atualizarDadosPerfil(idUsuario: String, dados: Map<String, String>) {
+        firestore.collection("usuarios")
+            .document(idUsuario)
+            .update(dados)
+            .addOnSuccessListener {
+                exibirMensagem("Sucesso ao atualizar imagem perfil")
+            }.addOnFailureListener {
+                exibirMensagem("Erro ao atualizar imagem de perfil")
+            }
     }
 
     private fun inicializarEventosClique() {
@@ -108,6 +138,31 @@ class PerfilActivity : AppCompatActivity() {
             } else {
                 exibirMensagem("Não tem permissão para acessar a Galeria")
                 solicitarPermissoes()
+            }
+
+        }
+
+        btnAtualizar.setOnClickListener {
+
+            val nomeUsuario = editTextPerfilNome.text.toString()
+
+            if(nomeUsuario != null) {
+
+                if(idUsuario != null) {
+
+                    val dados = mapOf(
+                        "nome" to nomeUsuario
+                    )
+
+                    atualizarDadosPerfil( idUsuario, dados )
+                    exibirMensagem("Sucesso ao atualizar nome")
+
+                } else {
+                    exibirMensagem("Usuario sem ID")
+                }
+
+            } else {
+                exibirMensagem("Preencha o nome para atualizar")
             }
 
         }
