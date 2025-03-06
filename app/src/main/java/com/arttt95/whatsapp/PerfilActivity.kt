@@ -2,6 +2,7 @@ package com.arttt95.whatsapp
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.widget.Button
@@ -16,11 +17,21 @@ import com.arttt95.whatsapp.databinding.ActivityPerfilBinding
 import com.arttt95.whatsapp.utils.exibirMensagem
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.textfield.TextInputEditText
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.storage.FirebaseStorage
 
 class PerfilActivity : AppCompatActivity() {
 
     private val binding by lazy {
         ActivityPerfilBinding.inflate(layoutInflater)
+    }
+
+    private val firebaseAuth by lazy {
+        FirebaseAuth.getInstance()
+    }
+
+    private val storage by lazy {
+        FirebaseStorage.getInstance()
     }
 
     private var temPermissaoCamera = false
@@ -31,6 +42,7 @@ class PerfilActivity : AppCompatActivity() {
     ) { uri ->
         if( uri != null) {
             imgPerfil.setImageURI( uri )
+            uploadImagemStorage( uri )
         } else {
             exibirMensagem("Nenhuma imagem selecionada")
         }
@@ -59,6 +71,33 @@ class PerfilActivity : AppCompatActivity() {
 
     }
 
+    private fun uploadImagemStorage(uri: Uri) {
+
+        // -> fotos
+        //      -> usuarios
+        //              -> id_usuario
+        //                      -> perfil.jpg
+
+        val idUsuario = firebaseAuth.currentUser?.uid
+        if(idUsuario != null) {
+            storage
+                .getReference("fotos")
+                .child("usuarios")
+                .child(idUsuario)
+                .child("perfil.jpg")
+                .putFile( uri )
+                .addOnSuccessListener { task ->
+
+                    exibirMensagem("Sucesso ao fazer upload da imagem")
+
+                }.addOnFailureListener { err ->
+                    exibirMensagem("Erro ao fazer Upload da imagem")
+                }
+        }
+
+
+
+    }
 
     private fun inicializarEventosClique() {
 
