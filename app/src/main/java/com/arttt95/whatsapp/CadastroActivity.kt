@@ -3,7 +3,6 @@ package com.arttt95.whatsapp
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
-import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -84,11 +83,11 @@ class CadastroActivity : AppCompatActivity() {
 
                 // Salvar dados do usuário no Firestore
                 // ID, Nome, E-mail, Foto
-                val idUsuario = resultado.result.user?.uid
+                val idUsuarioLogado = resultado.result.user?.uid
 
-                if(idUsuario != null) {
+                if(idUsuarioLogado != null) {
                     val usuario = Usuario(
-                        idUsuario, nome, email,
+                        idUsuarioLogado, nome, email,
                     )
                     salvarUsuarioFirestore(usuario)
                 }

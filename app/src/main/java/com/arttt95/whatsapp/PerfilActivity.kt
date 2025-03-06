@@ -43,7 +43,7 @@ class PerfilActivity : AppCompatActivity() {
     private var temPermissaoCamera = false
     private var temPermissaoGaleria = false
 
-    private val idUsuario = firebaseAuth.currentUser?.uid
+    private val idUsuarioLogado = firebaseAuth.currentUser?.uid
 
     private val gerenciadorGaleria = registerForActivityResult(
         ActivityResultContracts.GetContent()
@@ -88,10 +88,10 @@ class PerfilActivity : AppCompatActivity() {
 
     private fun recuperarDadosIniciaisUsuarios() {
 
-        if(idUsuario != null) {
+        if(idUsuarioLogado != null) {
 
             firestore.collection("usuarios")
-                .document( idUsuario )
+                .document( idUsuarioLogado )
                 .get()
                 .addOnSuccessListener { documentSnapshot ->
 
@@ -124,11 +124,11 @@ class PerfilActivity : AppCompatActivity() {
         //                      -> perfil.jpg
 
 
-        if(idUsuario != null) {
+        if(idUsuarioLogado != null) {
             storage
                 .getReference("fotos")
                 .child("usuarios")
-                .child(idUsuario)
+                .child(idUsuarioLogado)
                 .child("perfil.jpg")
                 .putFile( uri )
                 .addOnSuccessListener { task ->
@@ -143,7 +143,7 @@ class PerfilActivity : AppCompatActivity() {
                                 "foto" to downloadUrl.toString()
                             )
 
-                            atualizarDadosPerfil( idUsuario, dados )
+                            atualizarDadosPerfil( idUsuarioLogado, dados )
 
                         }
 
@@ -186,13 +186,13 @@ class PerfilActivity : AppCompatActivity() {
 
             if(nomeUsuario != null) {
 
-                if(idUsuario != null) {
+                if(idUsuarioLogado != null) {
 
                     val dados = mapOf(
                         "nome" to nomeUsuario
                     )
 
-                    atualizarDadosPerfil( idUsuario, dados )
+                    atualizarDadosPerfil( idUsuarioLogado, dados )
                     exibirMensagem("Sucesso ao atualizar nome")
 
                 } else {
