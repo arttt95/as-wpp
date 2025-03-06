@@ -8,7 +8,9 @@ import com.arttt95.whatsapp.databinding.ItemContatosBinding
 import com.arttt95.whatsapp.models.Usuario
 import com.squareup.picasso.Picasso
 
-class ContatosAdapter: Adapter<ContatosAdapter.ContatosViewHolder> () { // Herda de androidx.recyclerview...
+class ContatosAdapter(
+    private val onClick: (Usuario) -> Unit // Criando uma função que recebe um param do tipo Usuario e não retorna nada (return Unit)
+): Adapter<ContatosAdapter.ContatosViewHolder> () { // Herda de androidx.recyclerview...
 
     private var listaContatos = emptyList<Usuario>()
 
@@ -29,6 +31,11 @@ class ContatosAdapter: Adapter<ContatosAdapter.ContatosViewHolder> () { // Herda
             Picasso.get()
                 .load(usuario.foto)
                 .into(binding.imgContatoFoto)
+
+            // Evento de clique em cada contato
+            binding.clItemContato.setOnClickListener {
+                onClick(usuario) // Ativando a o method onClick passando o usuario que já é recebido pelo method bind
+            }
 
         }
 

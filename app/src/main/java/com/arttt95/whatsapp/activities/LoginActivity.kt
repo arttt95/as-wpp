@@ -1,4 +1,4 @@
-package com.arttt95.whatsapp
+package com.arttt95.whatsapp.activities
 
 import android.content.Intent
 import android.os.Bundle
@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.arttt95.whatsapp.R
 import com.arttt95.whatsapp.databinding.ActivityLoginBinding
 import com.arttt95.whatsapp.utils.exibirMensagem
 import com.google.android.material.textfield.TextInputEditText

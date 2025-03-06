@@ -1,5 +1,6 @@
 package com.arttt95.whatsapp.fragments
 
+import android.content.Intent
 import android.icu.lang.UCharacter.VerticalOrientation
 import android.os.Bundle
 import android.util.Log
@@ -9,9 +10,11 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.arttt95.whatsapp.activities.MensagensActivity
 import com.arttt95.whatsapp.adapters.ContatosAdapter
 import com.arttt95.whatsapp.databinding.FragmentContatosBinding
 import com.arttt95.whatsapp.models.Usuario
+import com.arttt95.whatsapp.utils.Constantes
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
@@ -45,7 +48,20 @@ class ContatosFragment : Fragment() {
         )
 
         // Criando o Adapter de consumo para o RecyclerView rvContatos
-        contatosAdapter = ContatosAdapter()
+        contatosAdapter = ContatosAdapter { usuario ->
+
+            val intent = Intent(context, MensagensActivity::class.java) // Nós temos context em Fragments
+
+            // Passando dados do usuario para a próxima tela
+            // Para o putExtra funcionar é necessário adicionar o plugin Parcelize on gradle:module
+            // E implementar a interface Parcelable no model em questão
+            intent.putExtra("dadosDestinatario", usuario)
+            intent.putExtra("origem", Constantes.ORIGEM_CONTATO)
+
+            // Iniciando MensagensActivity
+            startActivity(intent)
+
+        }
         binding.rvContatos.adapter = contatosAdapter
         binding.rvContatos.layoutManager = LinearLayoutManager(context)
         // Criando a divisória entre os items (Vertical)
