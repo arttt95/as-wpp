@@ -4,14 +4,18 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.widget.Button
+import android.widget.ImageView
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.arttt95.whatsapp.databinding.ActivityPerfilBinding
+import com.arttt95.whatsapp.utils.exibirMensagem
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.textfield.TextInputEditText
 
 class PerfilActivity : AppCompatActivity() {
 
@@ -22,7 +26,22 @@ class PerfilActivity : AppCompatActivity() {
     private var temPermissaoCamera = false
     private var temPermissaoGaleria = false
 
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    private val gerenciadorGaleria = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri ->
+        if( uri != null) {
+            imgPerfil.setImageURI( uri )
+        } else {
+            exibirMensagem("Nenhuma imagem selecionada")
+        }
+    }
+
+    private lateinit var imgPerfil: ImageView
+    private lateinit var fabSelecionar: FloatingActionButton
+    private lateinit var editTextPerfilNome: TextInputEditText
+    private lateinit var btnAtualizar: Button
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -33,13 +52,42 @@ class PerfilActivity : AppCompatActivity() {
             insets
         }
 
+        inicializarComponentes()
         inicializarToolbar()
         solicitarPermissoes()
+        inicializarEventosClique()
 
     }
 
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+
+    private fun inicializarEventosClique() {
+
+        fabSelecionar.setOnClickListener {
+
+            if( temPermissaoGaleria ) {
+                gerenciadorGaleria.launch("image/*")
+            } else {
+                exibirMensagem("Não tem permissão para acessar a Galeria")
+                solicitarPermissoes()
+            }
+
+        }
+
+    }
+
+    private fun inicializarComponentes() {
+
+        imgPerfil = binding.imgPerfil
+        fabSelecionar = binding.fabSelecionar
+        editTextPerfilNome = binding.editTextPerfilNome
+        btnAtualizar = binding.btnAtualizar
+
+    }
+
     private fun solicitarPermissoes() {
+
+        // Lista de permissoes negadas
+        val listaPermissoesNegadas = mutableListOf<String>()
 
         // Verifico se o usuario já tem essa permissão
         temPermissaoCamera = ContextCompat.checkSelfPermission(
@@ -47,18 +95,30 @@ class PerfilActivity : AppCompatActivity() {
             Manifest.permission.CAMERA
         ) == PackageManager.PERMISSION_GRANTED
 
-        temPermissaoGaleria = ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.READ_MEDIA_IMAGES
-        ) == PackageManager.PERMISSION_GRANTED
-
-        // Lista de permissoes negadas
-        val listaPermissoesNegadas = mutableListOf<String>()
-
         if (!temPermissaoCamera) {
             listaPermissoesNegadas.add(Manifest.permission.CAMERA)
-        } else if (!temPermissaoGaleria) {
-            listaPermissoesNegadas.add(Manifest.permission.READ_MEDIA_IMAGES)
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            temPermissaoGaleria = ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.READ_MEDIA_IMAGES
+            ) == PackageManager.PERMISSION_GRANTED
+
+            if(!temPermissaoGaleria) {
+                listaPermissoesNegadas.add(Manifest.permission.READ_MEDIA_IMAGES)
+            }
+
+        } else {
+            temPermissaoGaleria = ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED
+
+            if(!temPermissaoGaleria) {
+                listaPermissoesNegadas.add(Manifest.permission.READ_EXTERNAL_STORAGE)
+            }
+
         }
 
         // Solicitar multiplas permissoes
@@ -68,7 +128,17 @@ class PerfilActivity : AppCompatActivity() {
             ) { permissoes ->
 
                 temPermissaoCamera = permissoes[Manifest.permission.CAMERA] ?: temPermissaoCamera
-                temPermissaoGaleria = permissoes[Manifest.permission.READ_MEDIA_IMAGES] ?: temPermissaoGaleria
+
+                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+
+                    temPermissaoGaleria = permissoes[Manifest.permission.READ_MEDIA_IMAGES] ?: temPermissaoGaleria
+
+                } else {
+
+                    temPermissaoGaleria = permissoes[Manifest.permission.READ_EXTERNAL_STORAGE] ?: temPermissaoGaleria
+
+                }
+
             }
 
             gerenciadorPermissoes.launch( listaPermissoesNegadas.toTypedArray() )
