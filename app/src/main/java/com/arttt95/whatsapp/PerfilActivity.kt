@@ -20,6 +20,7 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
+import com.squareup.picasso.Picasso
 
 class PerfilActivity : AppCompatActivity() {
 
@@ -75,6 +76,43 @@ class PerfilActivity : AppCompatActivity() {
         inicializarToolbar()
         solicitarPermissoes()
         inicializarEventosClique()
+
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        recuperarDadosIniciaisUsuarios()
+
+    }
+
+    private fun recuperarDadosIniciaisUsuarios() {
+
+        if(idUsuario != null) {
+
+            firestore.collection("usuarios")
+                .document( idUsuario )
+                .get()
+                .addOnSuccessListener { documentSnapshot ->
+
+                    val dadosusuario = documentSnapshot.data
+                    if(dadosusuario != null) {
+
+                        val nome = dadosusuario["nome"] as String
+                        val foto = dadosusuario["foto"] as String
+
+                        editTextPerfilNome.setText(nome)
+                        if(foto.isNotEmpty()) {
+
+                            Picasso.get()
+                                .load( foto )
+                                .into(imgPerfil)
+
+                        }
+                    }
+                }
+
+        }
 
     }
 

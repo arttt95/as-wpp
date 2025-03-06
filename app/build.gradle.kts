@@ -57,4 +57,7 @@ dependencies {
     implementation("com.google.firebase:firebase-auth") // Authentication
     implementation("com.google.firebase:firebase-firestore") // Firestore (Database)
     implementation("com.google.firebase:firebase-storage") // Cloud Storage (Store Images)
+
+    // Picasso
+    implementation("com.squareup.picasso:picasso:2.8")
 }
