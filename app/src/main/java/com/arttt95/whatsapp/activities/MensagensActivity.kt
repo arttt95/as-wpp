@@ -10,6 +10,7 @@ import com.arttt95.whatsapp.R
 import com.arttt95.whatsapp.databinding.ActivityMensagensBinding
 import com.arttt95.whatsapp.models.Usuario
 import com.arttt95.whatsapp.utils.Constantes
+import com.squareup.picasso.Picasso
 
 class MensagensActivity : AppCompatActivity() {
 
@@ -30,6 +31,31 @@ class MensagensActivity : AppCompatActivity() {
         }
 
         recuperarDadosUsuarioDestinatario()
+        inicializarToolbar()
+
+    }
+
+    private fun inicializarToolbar() {
+
+        val toolbar = binding.tbMensagens
+
+        setSupportActionBar( toolbar )
+        supportActionBar?.apply {
+            title = ""
+
+            if(dadosDestinatario != null) {
+
+                // Inserindo o nome do Destinatário no TextView
+                binding.textMensagensNome.text = dadosDestinatario!!.nome
+                // Utilizando o Picasso para inserir a foto do Destinatário (url) na imgMensagens
+                Picasso.get()
+                    .load(dadosDestinatario!!.foto)
+                    .into(binding.imgMensagensFotoPerfil)
+
+            }
+
+            setDisplayHomeAsUpEnabled(true)
+        }
 
     }
 

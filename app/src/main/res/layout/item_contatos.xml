@@ -30,10 +30,8 @@
         app:layout_constraintBottom_toBottomOf="@+id/imgContatoFoto"
         app:layout_constraintStart_toEndOf="@+id/imgContatoFoto"
         app:layout_constraintTop_toTopOf="@+id/imgContatoFoto" />
-    <!--
-        Adicionados acima:
+    <!-- Adicionados acima:
             -> scaleType
-            -> shapeAppearanceOverlay
-     -->
+            -> shapeAppearanceOverlay -->
 
 </androidx.constraintlayout.widget.ConstraintLayout>
