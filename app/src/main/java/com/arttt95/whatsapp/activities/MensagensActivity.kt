@@ -2,14 +2,25 @@ package com.arttt95.whatsapp.activities
 
 import android.os.Build
 import android.os.Bundle
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.recyclerview.widget.RecyclerView
 import com.arttt95.whatsapp.R
 import com.arttt95.whatsapp.databinding.ActivityMensagensBinding
+import com.arttt95.whatsapp.models.Mensagem
 import com.arttt95.whatsapp.models.Usuario
 import com.arttt95.whatsapp.utils.Constantes
+import com.arttt95.whatsapp.utils.exibirMensagem
+import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.squareup.picasso.Picasso
 
 class MensagensActivity : AppCompatActivity() {
@@ -17,6 +28,22 @@ class MensagensActivity : AppCompatActivity() {
     private val binding by lazy {
         ActivityMensagensBinding.inflate(layoutInflater)
     }
+
+    private val firebaseAuth by lazy {
+        FirebaseAuth.getInstance()
+    }
+
+    private val firestore by lazy {
+        FirebaseFirestore.getInstance()
+    }
+
+    private lateinit var toolbar: MaterialToolbar
+    private lateinit var imgMensagensFotoPerfilDestinatario: ImageView
+    private lateinit var textMensagensNomeDestinatrio: TextView
+    private lateinit var rcMensagens: RecyclerView
+    private lateinit var fabMensagensEnviar: FloatingActionButton
+    private lateinit var textInputMensagensDigitar: TextInputLayout
+    private lateinit var editTextMensagensDigitar: TextInputEditText
 
     private var dadosDestinatario: Usuario? = null
 
@@ -30,9 +57,77 @@ class MensagensActivity : AppCompatActivity() {
             insets
         }
 
+        inicializarComponentes()
         recuperarDadosUsuarioDestinatario()
         inicializarToolbar()
+        inicializarEventosClique()
 
+    }
+
+    private fun inicializarEventosClique() {
+
+        fabMensagensEnviar.setOnClickListener {
+
+            val mensagem = editTextMensagensDigitar.text.toString()
+            savarMensagem(mensagem)
+
+        }
+
+    }
+
+    private fun savarMensagem(textoMensagem: String) {
+
+        // -> Mensagens
+        //  -> ID do doc = ID remetente
+        //      -> Código da coleção = ID destinatário
+        //          -> cada doc terá um ID o campo será mensagem | Tipo = string | Valor = MENSAGEM
+
+        if(textoMensagem.isNotEmpty()) {
+            val idUsuarioRemetente = firebaseAuth.currentUser?.uid
+            val idUsuarioDestinatario = dadosDestinatario?.id
+
+            if(idUsuarioRemetente != null && idUsuarioDestinatario != null) {
+
+                val mensagem = Mensagem(idUsuarioRemetente, textoMensagem)
+
+                // Salvar msg para o remetente
+                salvarMensagemFirestore(idUsuarioRemetente, idUsuarioDestinatario, mensagem)
+
+                // Salvar msg para o destinatário
+                salvarMensagemFirestore(idUsuarioDestinatario, idUsuarioRemetente, mensagem)
+
+
+            }
+        }
+    }
+
+    private fun salvarMensagemFirestore(
+        idUsuarioRemetente: String,
+        idUsuarioDestinatario: String,
+        mensagem: Mensagem
+    ) {
+
+        firestore.collection(Constantes.DB_MENSAGENS)
+            .document(idUsuarioRemetente)
+            .collection(idUsuarioDestinatario)
+            .add(mensagem)
+            .addOnFailureListener {
+                exibirMensagem("Erro ao enviar mensagem")
+            }
+
+        editTextMensagensDigitar.setText("")
+
+    }
+
+
+    private fun inicializarComponentes() {
+        toolbar = binding.tbMensagens
+        imgMensagensFotoPerfilDestinatario = binding.imgMensagensFotoPerfil
+        textMensagensNomeDestinatrio = binding.textMensagensNome
+        rcMensagens = binding.rcMensagens
+        fabMensagensEnviar = binding.fabMensagensEnviar
+        textInputMensagensDigitar = binding.textInputMensagensDigitar
+        editTextMensagensDigitar = binding.editTextMensagensDigitar
     }
 
     private fun inicializarToolbar() {
