@@ -2,6 +2,7 @@ package com.arttt95.whatsapp.activities
 
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
@@ -21,22 +22,29 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.toObject
 import com.squareup.picasso.Picasso
 
 class MensagensActivity : AppCompatActivity() {
 
     private val binding by lazy {
         ActivityMensagensBinding.inflate(layoutInflater)
-    }
+    } // BINDING
 
     private val firebaseAuth by lazy {
         FirebaseAuth.getInstance()
-    }
+    } // AUTH
 
     private val firestore by lazy {
         FirebaseFirestore.getInstance()
-    }
+    } // FIRESTORE
 
+    // ListenerRegistraion
+    private lateinit var listenerRegistration: ListenerRegistration
+
+    // Componentes
     private lateinit var toolbar: MaterialToolbar
     private lateinit var imgMensagensFotoPerfilDestinatario: ImageView
     private lateinit var textMensagensNomeDestinatrio: TextView
@@ -45,6 +53,7 @@ class MensagensActivity : AppCompatActivity() {
     private lateinit var textInputMensagensDigitar: TextInputLayout
     private lateinit var editTextMensagensDigitar: TextInputEditText
 
+    // DADOS Destinatário
     private var dadosDestinatario: Usuario? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,6 +70,55 @@ class MensagensActivity : AppCompatActivity() {
         recuperarDadosUsuarioDestinatario()
         inicializarToolbar()
         inicializarEventosClique()
+        inicializarListeners()
+
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        listenerRegistration.remove() // Parar de copiar a rede de Mensagens
+    }
+
+    private fun inicializarListeners() {
+
+        val idUsuarioRemetente = firebaseAuth.currentUser?.uid
+        val idUsuarioDestinatario = dadosDestinatario?.id
+
+        if(idUsuarioRemetente != null && idUsuarioDestinatario != null) {
+
+            listenerRegistration = firestore
+                .collection(Constantes.DB_MENSAGENS)
+                .document(idUsuarioRemetente)
+                .collection(idUsuarioDestinatario)
+                .orderBy("data", Query.Direction.ASCENDING) // Query de firebase.firestore
+                .addSnapshotListener { querySnapshot, err ->
+
+                    if(err != null) {
+                        exibirMensagem("Erro ao recuperar mensagens")
+                    }
+
+                    val listaMensagens = mutableListOf<Mensagem>()
+                    val documentos = querySnapshot?.documents
+
+                    documentos?.forEach { documentSnapshot ->
+
+                        val mensagem = documentSnapshot.toObject(Mensagem::class.java)
+
+                        if(mensagem != null) {
+                            listaMensagens.add(mensagem)
+                            Log.i("exibicao_mensagens", mensagem.mensagem)
+                        }
+
+                    }
+
+                    // Aqui teremos a nossa listaMensagens
+                    if(listaMensagens.isNotEmpty()) {
+                        // Carregar os dados no Adapter
+                    }
+
+                }
+
+        }
 
     }
 
@@ -77,14 +135,15 @@ class MensagensActivity : AppCompatActivity() {
 
     private fun savarMensagem(textoMensagem: String) {
 
+        val idUsuarioRemetente = firebaseAuth.currentUser?.uid
+        val idUsuarioDestinatario = dadosDestinatario?.id
+
         // -> Mensagens
         //  -> ID do doc = ID remetente
         //      -> Código da coleção = ID destinatário
         //          -> cada doc terá um ID o campo será mensagem | Tipo = string | Valor = MENSAGEM
 
         if(textoMensagem.isNotEmpty()) {
-            val idUsuarioRemetente = firebaseAuth.currentUser?.uid
-            val idUsuarioDestinatario = dadosDestinatario?.id
 
             if(idUsuarioRemetente != null && idUsuarioDestinatario != null) {
 
@@ -102,9 +161,7 @@ class MensagensActivity : AppCompatActivity() {
     }
 
     private fun salvarMensagemFirestore(
-        idUsuarioRemetente: String,
-        idUsuarioDestinatario: String,
-        mensagem: Mensagem
+        idUsuarioRemetente: String, idUsuarioDestinatario: String, mensagem: Mensagem
     ) {
 
         firestore.collection(Constantes.DB_MENSAGENS)
